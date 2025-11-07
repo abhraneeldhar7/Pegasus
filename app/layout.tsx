@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProviders } from "./themeProviders";
+import FooterPage from "@/components/ui/footer";
+import { UserProvider } from "@/context/userProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 
 export const metadata: Metadata = {
@@ -18,7 +21,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
         <ThemeProviders>
-          {children}
+          <UserProvider>
+            <Toaster richColors position="top-center" />
+            {children}
+            <FooterPage />
+          </UserProvider>
         </ThemeProviders>
       </body>
     </html>
