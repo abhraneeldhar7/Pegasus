@@ -16,8 +16,9 @@ if (!pool) {
         password: process.env.MYSQL_PASSWORD,
         database: process.env.MYSQL_DATABASE_NAME,
         waitForConnections: true,
-        connectionLimit: 10, 
+        connectionLimit: 10,
         queueLimit: 0,
+        timezone: "+05:30",
     });
 
     globalForMysql.mysqlPool = pool;

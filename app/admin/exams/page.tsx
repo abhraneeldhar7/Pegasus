@@ -1,6 +1,6 @@
 "use client"
 import { getDepartmentTableData } from "@/app/actions/departmentActions";
-import { createExam, deleteExam, getExamManagerTableData } from "@/app/actions/examActions";
+import { createExam, deleteExam, getActiveExams, getExamManagerTableData, testNow } from "@/app/actions/examActions";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { departmentType } from "@/lib/types";
+import { departmentType, examType } from "@/lib/types";
 import { cn, formatDateTime } from "@/lib/utils";
 import { PopoverClose } from "@radix-ui/react-popover";
 import { Check, ChevronDownIcon, ChevronLeft, ChevronsUpDown, Ellipsis, GraduationCap, LayersIcon, Pencil, PlusCircle, SquareArrowUpRightIcon, Trash2Icon } from "lucide-react";
@@ -30,7 +30,7 @@ export default function ExamsPage() {
     }
 
     const [examTableData, setExamTableData] = useState<tableDataType[] | null>(null)
-
+    const [activeExam, setActiveExam] = useState<examType[] | null>(null)
 
     useEffect(() => {
         const init = async () => {
@@ -39,6 +39,9 @@ export default function ExamsPage() {
 
             const departmentRes = await getDepartmentTableData();
             setDepartments(departmentRes)
+
+            const activeExamRes = await getActiveExams();
+            setActiveExam(activeExamRes)
         }
         init();
     }, [])
@@ -63,8 +66,6 @@ export default function ExamsPage() {
     const [newExamEndTime, setNewExamEndTime] = useState<Date | null>(null)
     const [newExamDialogOpen, setNewExamDialogOpen] = useState(false)
     const [newExamLoading, setNewExamLoading] = useState(false)
-    const [startTimeOpen, setStartTimeOpen] = useState(false)
-    const [endTimeOpen, setEndTimeOpen] = useState(false)
 
 
     useEffect(() => {
@@ -84,7 +85,7 @@ export default function ExamsPage() {
         <div className="flex justify-between w-full flex-wrap">
             <h1 className="text-[32px] font-[400]">Exam Manager</h1>
             <div className="grid grid-cols-2 gap-[15px] md:w-[400px] w-full min-w-[250px]">
-                
+
                 <Dialog open={newExamDialogOpen} onOpenChange={(e) => {
                     setNewExamDialogOpen(e);
                     setNewExamTitle("")
@@ -365,30 +366,32 @@ export default function ExamsPage() {
         <div className="mt-[30px] flex flex-col gap-[10px] min-h-[150px]">
             <h1 className="text-[20px] font-[400]">Active Exams</h1>
 
-            <p className="text-[15px] opacity-[0.7]">No active exams</p>
+            {!activeExam &&
+                <p className="text-[15px] opacity-[0.7]">No active exams</p>
+            }
 
-            {/* <div className="rounded-[15px] md:h-[120px] h-[150px] shadow-md md:max-w-[220px] relative overflow-hidden px-[15px] py-[10px] bg-muted flex flex-col justify-between group select-none cursor-pointer">
-                <LayersIcon size={90} className="opacity-[0.4] absolute bottom-[-10px] right-[-10px] text-primary transition-all duration-300 group-hover:bottom-[0px] group-hover:opacity-[0.8]" />
-                <div className="flex gap-[10px] justify-between">
-                <h1 className="md:text-[19px] text-[22px] truncate">Semester exam final</h1>
-                <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="ghost" className="h-[35px] w-[35px] rounded-[50%]"><Ellipsis /></Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-[5px] w-[120px]">
-                            <Button className="w-full flex justify-start" variant="ghost"><SquareArrowUpRightIcon /> Details</Button>
-                            <Button className="w-full flex justify-start" variant="ghost"><Pencil /> Edit</Button>
-                            <Button className="w-full flex justify-start text-[red]" variant="ghost"><Trash2Icon /> Delete</Button>
-                        </PopoverContent>
-                    </Popover>
+            {activeExam?.map((exam, index) => (
+                <div className="rounded-[15px] md:h-[120px] h-[150px] shadow-md md:max-w-[220px] relative overflow-hidden px-[15px] py-[10px] bg-muted flex flex-col justify-between group select-none cursor-pointer" key={index}>
+                    <LayersIcon size={90} className="opacity-[0.4] absolute bottom-[-10px] right-[-10px] text-primary transition-all duration-300 group-hover:bottom-[0px] group-hover:opacity-[0.8]" />
+                    <div className="flex gap-[10px] justify-between">
+                        <h1 className="md:text-[19px] text-[22px] truncate">{exam.title}</h1>
+                    </div>
+                    <div className="mt-auto">
+                        <p className="md:text-[12px] text-[15px] font-[Mono]">{formatDateTime(exam.start_time)}</p>
+                    </div>
                 </div>
-                <div className="mt-auto">
-                    <p className="md:text-[12px] text-[15px] font-[Mono]">15th Nov 14:35</p>
-                </div>
-            </div> */}
+            ))}
+
+
         </div>
 
 
+        <Button onClick={async () => {
+            const res = await testNow();
+            console.log(res)
+        }}>
+            test
+        </Button>
 
 
         <div className="mt-[50px] flex flex-col gap-[10px]">
@@ -421,7 +424,7 @@ export default function ExamsPage() {
                                     </PopoverTrigger>
                                     <PopoverContent className="p-[5px] w-[120px]">
                                         <Link href={`/admin/exams/${exam.exam_id}`}>
-                                        <Button className="w-full flex justify-start" variant="ghost"><Pencil /> Edit</Button>
+                                            <Button className="w-full flex justify-start" variant="ghost"><Pencil /> Edit</Button>
                                         </Link>
                                         <Dialog>
                                             <DialogTrigger asChild>

@@ -20,6 +20,7 @@ export default function LoginPage() {
 
     const [loginEmail, setLoginEmail] = useState("")
     const [loginPassword, setLoginPassword] = useState("")
+    const [loginLoader, setLoginLoader] = useState(false);
 
 
     return (<div className="h-[100vh] w-full flex">
@@ -35,6 +36,9 @@ export default function LoginPage() {
             <form onSubmit={async (e) => {
                 e.preventDefault();
                 if (!loginPassword.length || !loginEmail) return;
+
+                setLoginLoader(true)
+
                 const res = await fetch(`${process.env.NEXT_PUBLIC_URL!}/api/auth/login`, {
                     method: "POST",
                     headers: {
@@ -47,19 +51,20 @@ export default function LoginPage() {
                     })
                 })
                 const loginData = await res.json()
-                console.log(loginData)
                 if (loginData.success == true) {
                     toast.success("Success")
                     if (loginData.deocodedAccessToken.role == "admin") {
                         router.push("/admin/dashboard")
                     }
+                    return
                 }
-                if (loginData.error == "Invalid password") {
+                else if (loginData.error == "Invalid password") {
                     toast.error("Wrong Password")
                 }
-                if (loginData.error == "User not found") {
+                else if (loginData.error == "User not found") {
                     toast.error(`${userType == "admin" ? "Admin" : "Student"} not found`)
                 }
+                setLoginLoader(false)
             }}>
 
 
@@ -81,7 +86,7 @@ export default function LoginPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit">Log In</Button>
+                        <Button loading={loginLoader} type="submit">Log In</Button>
                     </CardFooter>
                 </Card>
             </form>

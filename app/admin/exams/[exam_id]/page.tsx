@@ -120,7 +120,7 @@ export default function ExamDetailsPage() {
 
     return (<div className="min-h-[100vh] max-w-[800px] w-full mx-auto md:py-[40px] py-[55px] px-[15px]">
 
-        <Link href="/admin/dashboard" className="z-[2] fixed md:top-[40px] md:left-[25px] top-[15px] left-[15px]">
+        <Link href="/admin/exams" className="z-[2] fixed md:top-[40px] md:left-[25px] top-[15px] left-[15px]">
             <Button variant="secondary">
                 <ChevronLeft />
             </Button>

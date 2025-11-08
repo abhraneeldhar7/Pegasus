@@ -307,3 +307,33 @@ export async function saveExam(exam: examType) {
     return { success: false, message: "Error saving exam" };
   }
 }
+
+export async function getActiveExams() {
+  const [rows] = await db.query(
+    `
+   SELECT * FROM exam 
+    WHERE start_time <= NOW() 
+    AND end_time >= NOW();
+    `
+  );
+
+  return rows;
+}
+
+export async function getUpcomingExams() {
+  const [rows] = await db.query(
+    `SELECT * FROM exam WHERE start_time > NOW() ORDER BY start_time ASC`
+  );
+  return rows;
+}
+
+
+export async function testNow() {
+  const [rows]: any = await db.query(`
+    SELECT NOW() AS server_now,
+      UTC_TIMESTAMP()    AS utc_now
+    FROM exam;
+  `);
+
+  return rows;
+}
