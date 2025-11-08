@@ -58,7 +58,7 @@ export default function LoginPage() {
                     toast.error("Wrong Password")
                 }
                 if (loginData.error == "User not found") {
-                    toast.error(`${userType == "admin" ? "Admin":"Student"} not found`)
+                    toast.error(`${userType == "admin" ? "Admin" : "Student"} not found`)
                 }
             }}>
 
@@ -88,7 +88,7 @@ export default function LoginPage() {
         </div>
 
         <div className="flex-1 h-full md:flex hidden p-[15px]">
-            <Image src={userType == "student" ? "/studentLoginWall.jpg" : "/adminLogin.jpg"} height={400} width={400} alt="" className="h-full w-full object-cover rounded-[15px]" />
+            <Image src={userType == "student" ? "/studentLoginWall.jpg" : "/adminLoginWall.jpg"} height={400} width={400} alt="" className="h-full w-full object-cover rounded-[15px]" unoptimized />
 
         </div>
 

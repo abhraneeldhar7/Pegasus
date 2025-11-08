@@ -41,3 +41,12 @@ export async function getCurrentUser() {
 }
 
 
+export async function getAdminCount(): Promise<number> {
+    try {
+        const [rows]: any = await db.query("SELECT COUNT(*) AS count FROM admin");
+        return rows[0].count;
+    } catch (error) {
+        console.error("Error fetching admin count:", error);
+        throw new Error("Failed to get admin count");
+    }
+}
