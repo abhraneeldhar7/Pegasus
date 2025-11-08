@@ -1,20 +1,21 @@
 "use server"
 
 import { db } from "@/lib/db";
+import { examType, questionType } from "@/lib/types";
 
 export async function getExamCount(): Promise<number> {
-    try {
-        const [rows]: any = await db.query("SELECT COUNT(*) AS count FROM exam");
-        return rows[0].count;
-    } catch (error) {
-        console.error("Error fetching exam count:", error);
-        throw new Error("Failed to get exam count");
-    }
+  try {
+    const [rows]: any = await db.query("SELECT COUNT(*) AS count FROM exam");
+    return rows[0].count;
+  } catch (error) {
+    console.error("Error fetching exam count:", error);
+    throw new Error("Failed to get exam count");
+  }
 }
 
 export async function getExamManagerTableData() {
-    try {
-        const [rows] = await db.query(`
+  try {
+    const [rows] = await db.query(`
       SELECT 
         e.exam_id,
         e.title AS exam_name,
@@ -31,58 +32,58 @@ export async function getExamManagerTableData() {
       ORDER BY e.start_time;
     `);
 
-        return rows;
-    } catch (error) {
-        console.error("Error fetching all exam summaries:", error);
-        throw new Error("Failed to fetch exam summaries");
-    }
+    return rows;
+  } catch (error) {
+    console.error("Error fetching all exam summaries:", error);
+    throw new Error("Failed to fetch exam summaries");
+  }
 }
 
 
 
 export async function createExam(formData: {
-    department_id: number
-    title: string
-    description: string
-    start_time: Date
-    end_time: Date
+  department_id: number
+  title: string
+  description: string
+  start_time: Date
+  end_time: Date
 }) {
-    try {
-        const [result] = await db.execute(
-            `
+  try {
+    const [result] = await db.execute(
+      `
       INSERT INTO exam (department_id, title, description, total_marks, start_time, end_time, duration_minutes)
       VALUES (?, ?, ?, ?, ?, ?, ?)
       `,
-            [
-                formData.department_id,
-                formData.title,
-                formData.description,
-                0,
-                formData.start_time,
-                formData.end_time,
-                0,
-            ]
-        );
+      [
+        formData.department_id,
+        formData.title,
+        formData.description,
+        0,
+        formData.start_time,
+        formData.end_time,
+        0,
+      ]
+    );
 
-        return {
-            success: true,
-            exam_id: (result as any).insertId,
-            message: "Exam created successfully",
-        };
-    } catch (error: any) {
-        console.error("Error creating exam:", error);
-        return {
-            success: false,
-            message: "Failed to create exam",
-            error: error.message,
-        };
-    }
+    return {
+      success: true,
+      exam_id: (result as any).insertId,
+      message: "Exam created successfully",
+    };
+  } catch (error: any) {
+    console.error("Error creating exam:", error);
+    return {
+      success: false,
+      message: "Failed to create exam",
+      error: error.message,
+    };
+  }
 }
 
 
 export async function deleteExam(exam_id: number) {
   try {
-  
+
     const [result] = await db.execute("DELETE FROM exam WHERE exam_id = ?", [exam_id])
 
     return {
@@ -151,51 +152,158 @@ export async function updateExamDetails(
   return { success: true, message: "Exam updated successfully" }
 }
 
-// 🔹 Add question
-export async function addQuestion(
-  examId: number,
-  q: {
-    question_text: string
-    option_a: string
-    option_b: string
-    option_c: string
-    option_d: string
-    correct_option: string
-  }
-) {
-  await db.execute(
-    `INSERT INTO question (exam_id, question_text, option_a, option_b, option_c, option_d, correct_option)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [examId, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_option]
-  )
+export async function addQuestion(question: questionType) {
+  try {
+    const query = `
+      INSERT INTO question (
+        exam_id, question_text, option_a, option_b, option_c, option_d, correct_option
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `
+    const values = [
+      question.exam_id,
+      question.question_text,
+      question.option_a,
+      question.option_b,
+      question.option_c,
+      question.option_d,
+      question.correct_option,
+    ]
 
-  return { success: true, message: "Question added successfully" }
+    const [result] = await db.execute(query, values)
+
+    return {
+      success: true,
+      insertedId: (result as any).question_id,
+      message: "Question added successfully",
+    }
+  } catch (error: any) {
+    console.error("Error adding question:", error)
+    return { success: false, message: error.message }
+  }
 }
 
-// 🔹 Update question
-export async function updateQuestion(
-  questionId: number,
-  q: {
-    question_text: string
-    option_a: string
-    option_b: string
-    option_c: string
-    option_d: string
-    correct_option: string
-  }
-) {
-  await db.execute(
-    `UPDATE question 
-     SET question_text=?, option_a=?, option_b=?, option_c=?, option_d=?, correct_option=? 
-     WHERE quesion_id=?`,
-    [q.question_text, q.option_a, q.option_b, q.option_c, q.option_d, q.correct_option, questionId]
-  )
+export async function saveQuestions(questions: questionType[]) {
+  try {
+    if (!questions || questions.length === 0) {
+      return { success: false, message: "No questions to save." }
+    }
 
-  return { success: true, message: "Question updated successfully" }
+    // separate new and existing questions
+    const newQuestions = questions.filter((q) => !q.question_id)
+    const existingQuestions = questions.filter((q) => q.question_id)
+
+    // ✅ Insert new questions
+    const insertedIds: number[] = []
+    if (newQuestions.length > 0) {
+      for (const q of newQuestions) {
+        const [res] = await db.execute(
+          `
+          INSERT INTO question 
+          (exam_id, question_text, option_a, option_b, option_c, option_d, correct_option)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+          `,
+          [
+            q.exam_id,
+            q.question_text,
+            q.option_a,
+            q.option_b,
+            q.option_c,
+            q.option_d,
+            q.correct_option,
+          ]
+        )
+        insertedIds.push((res as any).insertId)
+      }
+    }
+
+    // ✅ Update existing questions
+    if (existingQuestions.length > 0) {
+      for (const q of existingQuestions) {
+        await db.execute(
+          `
+          UPDATE question
+          SET question_text = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?, correct_option = ?
+          WHERE question_id = ? AND exam_id = ?
+          `,
+          [
+            q.question_text,
+            q.option_a,
+            q.option_b,
+            q.option_c,
+            q.option_d,
+            q.correct_option,
+            q.question_id,
+            q.exam_id,
+          ]
+        )
+      }
+    }
+
+    return {
+      success: true,
+      message: `Saved ${questions.length} questions successfully.`,
+      insertedIds,
+    }
+  } catch (error: any) {
+    console.error("Error saving questions:", error)
+    return {
+      success: false,
+      message: "Failed to save questions.",
+      error: error.message,
+    }
+  }
 }
 
 // 🔹 Delete question
 export async function deleteQuestion(questionId: number) {
-  await db.execute("DELETE FROM question WHERE quesion_id = ?", [questionId])
+  await db.execute("DELETE FROM question WHERE question_id = ?", [questionId])
   return { success: true, message: "Question deleted" }
+}
+
+
+export async function saveExam(exam: examType) {
+  const conn = db;
+  try {
+    // ✅ Create new exam
+    if (!exam.exam_id) {
+      const [res]: any = await conn.execute(
+        `INSERT INTO exam (department_id, title, description, total_marks, start_time, end_time, duration_minutes)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          exam.department_id,
+          exam.title,
+          exam.description,
+          exam.total_marks,
+          exam.start_time,
+          exam.end_time,
+          exam.duration_minutes,
+        ]
+      );
+      exam.exam_id = res.insertId;
+    }
+
+    else {
+      await conn.execute(
+        `UPDATE exam
+         SET department_id=?, title=?, description=?, total_marks=?, start_time=?, end_time=?, duration_minutes=?
+         WHERE exam_id=?`,
+        [
+          exam.department_id,
+          exam.title,
+          exam.description,
+          exam.total_marks,
+          exam.start_time,
+          exam.end_time,
+          exam.duration_minutes,
+          exam.exam_id,
+        ]
+      );
+    }
+
+
+    return { success: true, message: "Exam saved successfully", exam_id: exam.exam_id };
+  } catch (error: any) {
+    console.error("❌ Error saving exam:", error);
+    return { success: false, message: "Error saving exam" };
+  }
 }
