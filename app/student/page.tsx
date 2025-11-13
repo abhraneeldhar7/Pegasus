@@ -9,10 +9,10 @@ import { Ellipsis, GraduationCap, LayersIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getStudentDepartment } from "../actions/studentActions";
-import {  getStudentExams, getUpcomingExams } from "../actions/examActions";
+import { getStudentExams, getStudentResults, getUpcomingExams } from "../actions/examActions";
 import { formatDateTime } from "@/lib/utils";
 import Link from "next/link";
-import { Table, TableBody,  TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface studentExamType {
     student_exam_id: number,
@@ -37,7 +37,7 @@ export default function StudentDashboard() {
     const [studentDept, setStudentDept] = useState<departmentType | null>(null)
     const [activeExam, setActiveExam] = useState<studentExamType[] | null>(null)
     const [upcommingExams, setUpcommingExams] = useState<any[] | null>(null)
-    const [submittedExams, setSubmittedExams] = useState<studentExamType[] | null>(null)
+    const [completedExams, setCompletedExams] = useState<any[] | null>(null)
 
 
 
@@ -54,21 +54,21 @@ export default function StudentDashboard() {
 
 
             const activeExams: studentExamType[] = [];
-            const submittedExams: studentExamType[] = [];
+
             studentExams.exams.forEach((exam: studentExamType) => {
                 if (exam.status === "not_started") {
                     activeExams.push(exam);
                 }
-                else if (exam.status == "completed") {
-                    submittedExams.push(exam);
-                }
             });
             setActiveExam(activeExams);
-            setSubmittedExams(submittedExams);
 
             const upcommingExams = await getUpcomingExams(user.id);
             console.log("upcoming exams: ", upcommingExams)
             setUpcommingExams(upcommingExams.upcomingExams)
+
+
+            const studentResults = await getStudentResults(user.id);
+            setCompletedExams(studentResults.results)
         }
         init();
     }, [user])
@@ -150,14 +150,13 @@ export default function StudentDashboard() {
 
         <div className="mt-[40px]">
             <h1 className="text-[20px] font-[400]">Upcomming Exams</h1>
-
             <Table className="mt-[20px]">
                 <TableHeader>
                     <TableRow>
                         <TableHead>Exam name</TableHead>
                         <TableHead>Subject</TableHead>
                         <TableHead>Date</TableHead>
-                        <TableHead>Marks</TableHead>
+                        <TableHead>Total Marks</TableHead>
                         <TableHead>Duration</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -173,10 +172,37 @@ export default function StudentDashboard() {
                     ))}
                 </TableBody>
             </Table>
-
         </div>
 
-
+        {completedExams && completedExams.length > 0 &&
+            <div className="mt-[40px]">
+                <h1 className="text-[20px] font-[400]">Completed Exams</h1>
+                <Table className="mt-[20px]">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Exam name</TableHead>
+                            <TableHead>Subject</TableHead>
+                            <TableHead>Marks</TableHead>
+                            <TableHead>Total Marks</TableHead>
+                            <TableHead>Percentage</TableHead>
+                            <TableHead>Submitted At</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {completedExams?.map((exam, index) => (
+                            <TableRow key={index}>
+                                <TableCell>{exam.title}</TableCell>
+                                <TableCell>{exam.subject}</TableCell>
+                                <TableCell>{exam.marks_obtained}</TableCell>
+                                <TableCell>{exam.total_marks}</TableCell>
+                                <TableCell>{exam.percentage}</TableCell>
+                                <TableCell>{formatDateTime(exam.submitted_at)}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+        }
 
 
 

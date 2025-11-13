@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { useUser } from "@/context/userProvider"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 
@@ -117,12 +117,14 @@ export default function ExamPAge() {
         };
     }, []);
 
+    const router=useRouter();
     const [submitLoader, setSubmitLaoder] = useState(false);
     const handleSubmit = async () => {
         if (!user) return;
         setSubmitLaoder(true)
         await submitExam(user.id, Number(exam_id))
         setSubmitLaoder(false)
+        router.push("/student")
     }
 
     return (<div className="md:px-[40px] px-[10px] py-[20px] flex md:gap-[40px] min-h-[100vh] md:flex-row flex-col-reverse">
@@ -141,8 +143,8 @@ export default function ExamPAge() {
             </DialogContent>
         </Dialog>
 
-        <div className="flex-1 flex items-center flex-col gap-[10px]">
-            <h1>Questions Map</h1>
+        <div className="flex-1 flex flex-col gap-[20px]">
+
             {questions &&
                 <div className="p-[10px] rounded-[10px] border grid grid-cols-5 gap-[4px] md:w-[200px] h-fit">
                     {questions?.map((q, index) => (
@@ -150,6 +152,15 @@ export default function ExamPAge() {
                     ))}
                 </div>
             }
+
+            <div className="flex flex-col gap-[10px]">
+                <div className="flex font-[400] leading-[1em] gap-[10px] text-[14px] items-center">
+                    <h1 className="font-[500]">Total Questions</h1> {questions?.length}
+                </div>
+                <div className="flex font-[400] leading-[1em] gap-[10px] text-[14px] items-center">
+                    <h1 className="font-[500]">Answered</h1> {studentAnswers?.length}
+                </div>
+            </div>
 
         </div>
 

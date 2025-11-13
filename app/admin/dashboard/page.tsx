@@ -376,16 +376,13 @@ export default function AdminDashboard() {
 
 
 
-
-
-
-
-
-                <div className="rounded-[15px] shadow-sm h-[100px] relative overflow-hidden bg-[#454746] flex px-[15px] py-[8px] md:flex-1 max-w-[200px] flex-col justify-end text-[white]  transition-all duration-300 hover:translate-y-[-4px] active:translate-y-[4px] select-none cursor-pointer">
-                    <div className="absolute h-[120px] w-[100%] rounded-[50%] top-[-60px] bg-[#e5faf7] rotate-[-20deg] blur-[30px]" />
-                    <GraduationCap size={25} className="absolute z-[2] right-[15px] top-[15px]" />
-                    <h1 className="text-[17px] z-[2]">View Results</h1>
-                </div>
+                <Link href="/admin/results">
+                    <div className="rounded-[15px] shadow-sm h-[100px] relative overflow-hidden bg-[#454746] flex px-[15px] py-[8px] md:flex-1 max-w-[200px] flex-col justify-end text-[white]  transition-all duration-300 hover:translate-y-[-4px] active:translate-y-[4px] select-none cursor-pointer">
+                        <div className="absolute h-[120px] w-[100%] rounded-[50%] top-[-60px] bg-[#e5faf7] rotate-[-20deg] blur-[30px]" />
+                        <GraduationCap size={25} className="absolute z-[2] right-[15px] top-[15px]" />
+                        <h1 className="text-[17px] z-[2]">View Results</h1>
+                    </div>
+                </Link>
 
 
 

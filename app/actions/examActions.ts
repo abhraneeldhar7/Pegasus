@@ -347,26 +347,6 @@ export async function initiateExam(studentId: number, examId: number) {
 
 
 
-
-
-// -------------------------------------------------------
-// 7️⃣ FETCH STUDENT RESULT HISTORY
-// -------------------------------------------------------
-export async function getStudentResults(studentId: number) {
-  const [results] = await db.query(
-    `SELECT r.result_id, e.title, r.correct_answers, r.total_questions,
-            r.total_marks, r.percentage, se.start_time, se.end_time
-     FROM result r
-     JOIN student_exam se ON r.student_exam_id = se.student_exam_id
-     JOIN exam e ON se.exam_id = e.exam_id
-     WHERE se.student_id = ?
-     ORDER BY se.start_time DESC`,
-    [studentId]
-  );
-
-  return results;
-}
-
 // -------------------------------------------------------
 // 8️⃣ GET LIVE EXAMS (for students to see ongoing/upcoming)
 // -------------------------------------------------------
@@ -738,6 +718,96 @@ export async function getExamQuestions(exam_id: number) {
     };
   } catch (error: any) {
     console.error("Error fetching exam questions:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+
+
+export async function getStudentResults(student_id: number) {
+  try {
+    const [rows]: any = await db.query(
+      `
+      SELECT 
+        e.exam_id,
+        e.title,
+        e.subject,
+        e.total_marks,
+        r.total_marks AS marks_obtained,
+        r.percentage,
+        se.end_time AS submitted_at
+      FROM result r
+      JOIN exam e ON r.exam_id = e.exam_id
+      JOIN student_exam se ON r.student_exam_id = se.student_exam_id
+      WHERE se.student_id = ?
+      ORDER BY se.end_time DESC
+      `,
+      [student_id]
+    );
+
+    return {
+      success: true,
+      results: rows,
+    };
+  } catch (error: any) {
+    console.error("Error fetching student results:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+
+export async function getResultsGroupedByExam() {
+  try {
+    const [rows]: any = await db.query(
+      `
+      SELECT 
+        e.exam_id,
+        e.title AS exam_title,
+        e.subject,
+        e.total_marks AS max_marks,
+        s.student_id,
+        s.name AS student_name,
+        r.total_marks AS marks_obtained,
+        r.percentage,
+        se.end_time AS submitted_at
+      FROM result r
+      JOIN exam e ON r.exam_id = e.exam_id
+      JOIN student_exam se ON r.student_exam_id = se.student_exam_id
+      JOIN student s ON se.student_id = s.student_id
+      ORDER BY e.exam_id, s.name
+      `
+    );
+
+    // Group results by exam_id
+    const groupedResults: Record<number, any> = {};
+    for (const row of rows) {
+      if (!groupedResults[row.exam_id]) {
+        groupedResults[row.exam_id] = {
+          exam_id: row.exam_id,
+          exam_title: row.exam_title,
+          subject: row.subject,
+          max_marks: row.max_marks,
+          results: [],
+        };
+      }
+      groupedResults[row.exam_id].results.push({
+        student_id: row.student_id,
+        student_name: row.student_name,
+        marks_obtained: row.marks_obtained,
+        percentage: row.percentage,
+        submitted_at: row.submitted_at,
+      });
+    }
+
+    // Convert grouped object to array for easy rendering
+    const finalResults = Object.values(groupedResults);
+
+    return {
+      success: true,
+      groupedResults: finalResults,
+    };
+  } catch (error: any) {
+    console.error("Error fetching grouped results:", error);
     return { success: false, message: error.message };
   }
 }
