@@ -4,6 +4,7 @@ import { addQuestion, deleteQuestion, getExamWithQuestions, saveExam, saveQuesti
 import ClockComponent from "@/components/clock";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -11,9 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { departmentType, examType, questionType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { PopoverClose } from "@radix-ui/react-popover";
-import { Check, ChevronDownIcon, ChevronLeft, ChevronsUpDown, PlusIcon } from "lucide-react";
+import { Check, ChevronDownIcon, ChevronLeft, ChevronsUpDown, PlusIcon, SaveIcon, Trash2Icon, TrashIcon } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -41,6 +42,7 @@ export default function ExamDetailsPage() {
     }, [])
 
     const handleAddQuestion = async () => {
+        toast.info("Wait...")
         const newQ: questionType = {
             exam_id: Number(exam_id),
             question_id: questions?.length || 0 + 1,
@@ -51,43 +53,34 @@ export default function ExamDetailsPage() {
             option_d: "",
             correct_option: "",
         }
-
-        // 1. Add locally (for instant UI)
+        await addQuestion(newQ)
         setQuestions((prev) => [...prev || [], newQ])
+        toast.info("Added question")
 
-
-        const res = await addQuestion(newQ)
-
-        if (res?.success && res?.insertedId) {
-            setQuestions((prev) => {
-                if (!prev || prev.length === 0) {
-                    return [{ ...newQ, quesion_id: res.insertedId }]
-                }
-                const updated = [...prev]
-                const lastIndex = updated.length - 1
-                updated[lastIndex] = { ...updated[lastIndex], question_id: res.insertedId }
-                return updated
-            })
-        }
+        if (!questions || !examDetails) return;
+        await saveQuestions(questions)
+        await saveExam(examDetails);
 
     }
 
     const [departments, setDepartments] = useState<departmentType[] | null>(null)
 
-    const handleChange = (index: number, field: keyof questionType, value: string) => {
-        const updated = [...questions || []]
-        updated[index] = { ...updated[index], [field]: value }
-        setQuestions(updated)
-    }
+    const handleChange = (questionId: number, field: keyof questionType, value: string) => {
+        setQuestions((prev) => {
+            if (!prev) return [];
+            return prev.map((q) =>
+                q.question_id === questionId ? { ...q, [field]: value } : q
+            );
+        });
+    };
 
     const handleDeleteQuestion = async (index: number) => {
         if (!questions) return;
 
+        toast.info("Wait...")
         const qToDelete = questions[index];
         const updated = questions.filter((_, i) => i !== index);
-        setQuestions(updated);
 
-        // ✅ Only delete from DB if it exists there
         if (qToDelete?.question_id) {
             const res = await deleteQuestion(qToDelete.question_id);
             if (!res.success) {
@@ -95,36 +88,48 @@ export default function ExamDetailsPage() {
                 return;
             }
         }
-        toast.info("Deleted")
+        setQuestions(updated);
+        toast.info("Deleted");
+
+        if (!questions || !examDetails) return;
+        await saveQuestions(questions)
+        await saveExam(examDetails);
     };
+
+    useEffect(() => {
+        console.log(questions)
+    }, [questions])
 
     const [saveLoader, setSaveLoader] = useState(false);
 
+    const router = useRouter();
 
     const handleSave = async () => {
         if (!questions || !examDetails) return;
 
         setSaveLoader(true)
         const res = await saveQuestions(questions)
+        const res2 = await saveExam(examDetails);
 
-        if (res.success) {
+        if (res.success && res2.success) {
             toast.success("Questions saved successfully!")
             console.log("Inserted IDs:", res.insertedIds)
         } else {
             toast.error("Failed to save questions")
         }
-
-        const res2 = await saveExam(examDetails);
         setSaveLoader(false)
     }
 
-    return (<div className="min-h-[100vh] max-w-[800px] w-full mx-auto md:py-[40px] py-[55px] px-[15px]">
+    return (<div className="min-h-[100vh] max-w-[700px] w-full mx-auto md:py-[40px] py-[55px] px-[15px]">
 
         <Link href="/admin/exams" className="z-[2] fixed md:top-[40px] md:left-[25px] top-[15px] left-[15px]">
             <Button variant="secondary">
                 <ChevronLeft />
             </Button>
         </Link>
+
+        <Button className="z-[2] fixed md:top-[40px] md:right-[25px] top-[15px] right-[15px]" loading={saveLoader} onClick={() => { handleSave() }}><SaveIcon /> Save</Button>
+
 
         <div className="flex gap-[20px] items-start justify-between">
             <div className="flex-1">
@@ -134,7 +139,7 @@ export default function ExamDetailsPage() {
 
 
                 {examDetails &&
-                    <div className="flex flex-col gap-[15px] mt-[30px]">
+                    <div className="flex flex-col gap-[25px] mt-[30px]">
 
                         <div className="flex flex-col gap-[5px]">
                             <Label>Exam name</Label>
@@ -167,13 +172,15 @@ export default function ExamDetailsPage() {
                         </div>
 
 
+
+
                         <div className="flex flex-col gap-[5px]">
                             <Label>Department</Label>
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
-                                        className="w-[200px] justify-between"
+                                        className="w-[300px] justify-between"
                                         disabled={!departments}
                                     >
                                         <p className="max-w-[200px] truncate">
@@ -224,168 +231,31 @@ export default function ExamDetailsPage() {
                                         </PopoverClose>
                                     )
                                     )}
-
                                 </PopoverContent>
                             </Popover>
                         </div>
 
+                        <div className="flex gap-[30px]">
+                            <div className="flex flex-col gap-[10px] w-fit justify-center">
+                                <Label>Duration</Label>
+                                <Input className="w-[60px]" type="number" value={examDetails.duration_minutes} onChange={(e) => {
+                                    if (Number(e.target.value) < 0) return
+                                    setExamDetails(prev => {
+                                        if (!prev) return prev;
+                                        return {
+                                            ...prev,
+                                            duration_minutes: Number(e.target.value)
+                                        }
+                                    })
+                                }} />
+                            </div>
 
-                        <div className="flex flex-col gap-[5px]">
-                            <Label>Start Time</Label>
-                            <div className="flex gap-4">
-                                <div className="flex flex-col gap-3">
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                id="date-picker"
-                                                className="w-32 justify-between font-normal"
-                                            >
-                                                {examDetails.start_time ? examDetails.start_time.toLocaleDateString() : "Select date"}
-                                                <ChevronDownIcon />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={examDetails.start_time || undefined}
-                                                captionLayout="dropdown"
-                                                onSelect={(date: Date | undefined) => {
-                                                    if (!date) return
-
-                                                    // preserve old time if it exists
-                                                    let updatedDate = new Date(date)
-                                                    if (examDetails.start_time) {
-                                                        updatedDate.setHours(
-                                                            examDetails.start_time.getHours(),
-                                                            examDetails.start_time.getMinutes(),
-                                                            examDetails.start_time.getSeconds()
-                                                        )
-                                                    }
-
-                                                    setExamDetails(prev => {
-                                                        if (!prev) return prev;
-                                                        return {
-                                                            ...prev,
-                                                            start_time: updatedDate
-                                                        }
-                                                    })
-                                                }}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    <Input
-                                        type="time"
-                                        id="time-picker"
-                                        step="1"
-                                        defaultValue="00:00:00"
-                                        onChange={(e) => {
-                                            if (!examDetails.start_time) return
-
-                                            // parse time safely
-                                            const parts = e.target.value.split(":").map((v) => Number(v));
-                                            const hours = Number.isFinite(parts[0]) ? parts[0] : 0;
-                                            const minutes = Number.isFinite(parts[1]) ? parts[1] : 0;
-                                            const seconds = Number.isFinite(parts[2]) ? parts[2] : 0;
-
-                                            // update date in one call (avoids leaving seconds undefined)
-                                            const updatedDate = new Date(examDetails.start_time);
-                                            updatedDate.setHours(hours, minutes, seconds);
-
-                                            setExamDetails(prev => {
-                                                if (!prev) return prev;
-                                                return {
-                                                    ...prev,
-                                                    start_time: updatedDate
-                                                }
-                                            })
-                                        }}
-                                        className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                                    />
-                                </div>
+                            <div className="flex flex-col gap-[10px] w-fit justify-center">
+                                <Label>Total Marks</Label>
+                                <h1 className="text-center text-[22px]">{questions?.length}</h1>
                             </div>
                         </div>
 
-
-
-
-                        <div className="flex flex-col gap-[5px]">
-                            <Label>End Time</Label>
-                            <div className="flex gap-4">
-                                <div className="flex flex-col gap-3">
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                id="date-picker"
-                                                className="w-32 justify-between font-normal"
-                                            >
-                                                {examDetails.end_time ? examDetails.end_time.toLocaleDateString() : "Select date"}
-                                                <ChevronDownIcon />
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={examDetails.end_time || undefined}
-                                                captionLayout="dropdown"
-                                                onSelect={(date: Date | undefined) => {
-                                                    if (!date) return
-
-                                                    // preserve old time if it exists
-                                                    let updatedDate = new Date(date)
-                                                    if (examDetails.end_time) {
-                                                        updatedDate.setHours(
-                                                            examDetails.end_time.getHours(),
-                                                            examDetails.end_time.getMinutes(),
-                                                            examDetails.end_time.getSeconds()
-                                                        )
-                                                    }
-                                                    setExamDetails(prev => {
-                                                        if (!prev) return prev;
-                                                        return {
-                                                            ...prev,
-                                                            end_time: updatedDate
-                                                        }
-                                                    })
-                                                }}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                                <div className="flex flex-col gap-3">
-                                    <Input
-                                        type="time"
-                                        id="time-picker"
-                                        step="1"
-                                        defaultValue="00:00:00"
-                                        onChange={(e) => {
-                                            if (!examDetails.end_time) return
-
-                                            // parse time safely
-                                            const parts = e.target.value.split(":").map((v) => Number(v));
-                                            const hours = Number.isFinite(parts[0]) ? parts[0] : 0;
-                                            const minutes = Number.isFinite(parts[1]) ? parts[1] : 0;
-                                            const seconds = Number.isFinite(parts[2]) ? parts[2] : 0;
-
-                                            // update date in one call (avoids leaving seconds undefined)
-                                            const updatedDate = new Date(examDetails.end_time);
-                                            updatedDate.setHours(hours, minutes, seconds);
-                                            setExamDetails(prev => {
-                                                if (!prev) return prev;
-                                                return {
-                                                    ...prev,
-                                                    end_time: updatedDate
-                                                }
-                                            })
-                                        }}
-                                        className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                                    />
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 }
             </div>
@@ -404,44 +274,49 @@ export default function ExamDetailsPage() {
 
             <div className="flex flex-col gap-[20px] mt-[10px]">
                 {questions?.map((q, index) => (
-                    <div key={index} className="bg-muted border px-[18px] py-[14px] shadow-sm rounded-[15px] flex flex-col gap-[15px]">
+                    <div key={index} className="bg-muted dark:bg-muted/40 border px-[18px] py-[14px] shadow-sm rounded-[15px] flex flex-col gap-[15px]">
 
                         <div className="flex justify-between items-start">
-                            <h3 className="font-[500] font-[Poppins] text-[16px]">Question {index + 1}</h3>
+                            <h3 className="font-[500] text-[17px]">Question {index + 1}</h3>
                             <Button
-                                variant="destructive"
+                                className="dark:hover:bg-[unset]"
+                                variant="ghost"
                                 onClick={() => handleDeleteQuestion(index)}
                             >
-                                Delete
+                                <Trash2Icon color="red" />
                             </Button>
                         </div>
 
                         <Textarea
                             value={q.question_text}
-                            onChange={(e) => handleChange(index, "question_text", e.target.value)}
+                            onChange={(e) => handleChange(q.question_id, "question_text", e.target.value)}
                             placeholder="Enter question text"
-                            className="rounded-[10px] h-[100px]"
+                            className="rounded-[10px] h-[100px] bg-background"
                         />
 
                         <div className="grid grid-cols-2 gap-3">
                             <Input
+                                className="bg-background"
                                 value={q.option_a}
-                                onChange={(e) => handleChange(index, "option_a", e.target.value)}
+                                onChange={(e) => handleChange(q.question_id, "option_a", e.target.value)}
                                 placeholder="Option A"
                             />
                             <Input
+                                className="bg-background"
                                 value={q.option_b}
-                                onChange={(e) => handleChange(index, "option_b", e.target.value)}
+                                onChange={(e) => handleChange(q.question_id, "option_b", e.target.value)}
                                 placeholder="Option B"
                             />
                             <Input
+                                className="bg-background"
                                 value={q.option_c}
-                                onChange={(e) => handleChange(index, "option_c", e.target.value)}
+                                onChange={(e) => handleChange(q.question_id, "option_c", e.target.value)}
                                 placeholder="Option C"
                             />
                             <Input
+                                className="bg-background"
                                 value={q.option_d}
-                                onChange={(e) => handleChange(index, "option_d", e.target.value)}
+                                onChange={(e) => handleChange(q.question_id, "option_d", e.target.value)}
                                 placeholder="Option D"
                             />
                         </div>
@@ -458,7 +333,7 @@ export default function ExamDetailsPage() {
                                     {["A", "B", "C", "D"].map((option, i) => (
                                         <PopoverClose asChild key={i}>
                                             <Button variant="ghost" className="flex justify-start w-full" onClick={() => {
-                                                handleChange(index, "correct_option", option)
+                                                handleChange(q.question_id, "correct_option", option)
                                             }}>Option {option}</Button>
                                         </PopoverClose>
                                     ))}
@@ -474,8 +349,9 @@ export default function ExamDetailsPage() {
 
                 {questions && questions.length > 0 &&
                     <Button
+                        variant="outline"
                         onClick={handleAddQuestion}
-                        className="w-[150px]"
+                        className="w-[160px] h-[50px] mx-auto hover:bg-muted/40 shadow-sm"
                     >
                         + Add Question
                     </Button>
@@ -487,9 +363,84 @@ export default function ExamDetailsPage() {
         </div>
 
 
+        <div className="mt-[50px] text-[17px] opaicty-[0.8] flex flex-col gap-[20px]">
+            <div>
+                <h1 className="text-[17px] font-[500]">
+                    Saving an Exam
+                </h1>
+                <p className="opacity-[0.8] text-[14px] font-[450]">
+                    Once you've filled in all the exam details, click the <span className="text-primary font-[500]">Save</span> button to store your exam. This ensures all your entered information is safely saved to the system.
+                </p>
+            </div>
 
-        <div className="mt-[50px] flex justify-end">
-            <Button loading={saveLoader} onClick={() => { handleSave() }}>Confirm</Button>
+            <div>
+                <h1 className="text-[17px] font-[500]">
+                    Adding Questions
+                </h1>
+                <p className="opacity-[0.8] text-[14px] font-[450]">
+                    To create new questions for the exam, simply click the <span className="text-primary font-[500]">Add Question</span> button. You can add as many questions as needed before publishing.
+                </p>
+            </div>
+
+            <div>
+                <h1 className="text-[17px] font-[500]">
+                    Deleting an Exam
+                </h1>
+                <p className="opacity-[0.8] text-[14px] font-[450]">
+                    If you wish to remove an existing exam, use the <span className="text-primary font-[500]">Delete Exam</span> button. This action will permanently remove the exam from the system.
+                </p>
+            </div>
+
+            <div>
+                <h1 className="text-[17px] font-[500]">
+                    Publishing an Exam
+                </h1>
+                <p className="opacity-[0.8] text-[14px] font-[450]">
+                    When your exam is ready to go live, click the <span className="text-primary font-[500]">Publish</span> button. The exam will then be visible to students and marked as Live.
+                </p>
+            </div>
         </div>
-    </div>)
+
+        <div className="mt-[50px] flex gap-[20px] justify-between">
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant="secondary" className="text-[red]">Delete this exam</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogTitle>
+                        Delete this exam?
+                    </DialogTitle>
+                    <DialogDescription>This will delete the exam and it's questions. Students will not be able to attempt it.</DialogDescription>
+                    <DialogFooter className="md:gap-[30px]">
+                        <DialogClose>Cancel</DialogClose>
+                        <Button>
+                            Delete Exam
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+
+
+
+
+
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button >Publish</Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogTitle>Publish exam?</DialogTitle>
+                    <DialogDescription>This will set the exam to live and students can attempt and submit their answers</DialogDescription>
+
+                    <DialogFooter className="md:gap-[30px]">
+                        <DialogClose>Cancel</DialogClose>
+                        <Button>
+                            Publish
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </div>
+    </div >)
 }

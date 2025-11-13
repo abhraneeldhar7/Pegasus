@@ -1,8 +1,9 @@
 "use server"
 
 import { db } from "@/lib/db";
-import { studentType } from "@/lib/types";
+import { departmentType, studentType } from "@/lib/types";
 import bcrypt from "bcryptjs";
+import { cache } from "react";
 
 export async function getStudentCount(departmentId?: number) {
     try {
@@ -60,3 +61,49 @@ export async function insertStudents(students: studentType[]) {
         throw new Error("Failed to insert students");
     }
 }
+
+
+
+export async function getStudentDepartment(studentId: number) {
+    try {
+        const [rows] = await db.execute(
+            `
+      SELECT 
+        d.department_id,
+        d.name AS name,
+        d.code AS code
+      FROM student s
+      INNER JOIN department d ON s.department_id = d.department_id
+      WHERE s.student_id = ?;
+      `,
+            [studentId]
+        );
+
+        // rows will be an array of RowDataPackets
+        const departments = rows as {
+            department_id: number;
+            name: string;
+            code: string;
+        }[];
+
+        if (departments.length === 0) {
+            return { error: "Student or department not found" };
+        }
+
+        return departments[0];
+    } catch (error) {
+        console.error("Error fetching student department:", error);
+        return { error: "Database error" };
+    }
+}
+
+export async function getDepartmentStudents(deptId: number) {
+    const [rows] = await db.query(
+        `SELECT student_id, name, email 
+     FROM student 
+     WHERE department_id = ?`,
+        [deptId]
+    );
+
+    return rows;
+};

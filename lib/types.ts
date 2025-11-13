@@ -20,6 +20,7 @@ export interface examType {
     total_marks: number,
     start_time: Date,
     end_time: Date,
+    subject: string,
     duration_minutes: number
 }
 

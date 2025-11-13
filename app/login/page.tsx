@@ -25,6 +25,9 @@ export default function LoginPage() {
 
     return (<div className="h-[100vh] w-full flex">
         <div className="flex-1 flex flex-col md:p-[40px] p-[15px] justify-center">
+            <div className="flex justify-center mb-[15px]">
+                <Image src="appLogo.png" alt="" unoptimized height={100} width={100}/>
+            </div>
             <h1 className="text-[27px] text-center">Log in to Pegasus</h1>
 
             <div className="flex justify-center gap-[10px] mt-[20px]">
@@ -55,6 +58,10 @@ export default function LoginPage() {
                     toast.success("Success")
                     if (loginData.deocodedAccessToken.role == "admin") {
                         router.push("/admin/dashboard")
+                    }
+                    if(loginData.deocodedAccessToken.role=="student"){
+                        
+                        router.push("/student")
                     }
                     return
                 }
@@ -93,7 +100,7 @@ export default function LoginPage() {
         </div>
 
         <div className="flex-1 h-full md:flex hidden p-[15px]">
-            <Image src={userType == "student" ? "/studentLoginWall.jpg" : "/adminLoginWall.jpg"} height={400} width={400} alt="" className="h-full w-full object-cover rounded-[15px]" unoptimized />
+            <Image src={userType == "student" ? "/stdndLoginBanner.png" : "/educatorLoginBanner.png"} height={400} width={400} alt="" className="h-full w-full object-cover rounded-[15px]" unoptimized />
 
         </div>
 

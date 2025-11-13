@@ -42,25 +42,25 @@ export async function getExamManagerTableData() {
 
 
 export async function createExam(formData: {
-  department_id: number
-  title: string
-  description: string
-  start_time: Date
-  end_time: Date
+  department_id: number,
+  title: string,
+  description: string,
+  subject: string
 }) {
   try {
     const [result] = await db.execute(
       `
-      INSERT INTO exam (department_id, title, description, total_marks, start_time, end_time, duration_minutes)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO exam (department_id, title, description, subject, total_marks, start_time, end_time, duration_minutes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         formData.department_id,
         formData.title,
         formData.description,
-        0,
-        formData.start_time,
-        formData.end_time,
+        formData.subject,
+        60,
+        new Date,
+        new Date,
         0,
       ]
     );
@@ -328,12 +328,174 @@ export async function getUpcomingExams() {
 }
 
 
-export async function testNow() {
-  const [rows]: any = await db.query(`
-    SELECT NOW() AS server_now,
-      UTC_TIMESTAMP()    AS utc_now
-    FROM exam;
-  `);
 
+
+export async function initiateExam(studentId: number, examId: number) {
+  const startTime = new Date();
+  const [exam] = await db.query(
+    `SELECT duration_minutes FROM exam WHERE exam_id = ?`,
+    [examId]
+  );
+
+  if (exam.length === 0) throw new Error('Exam not found');
+
+  const endTime = new Date(startTime.getTime() + exam[0].duration_minutes * 60000);
+
+  const [result] = await db.query(
+    `INSERT INTO student_exam (student_id, exam_id, start_time, end_time, status)
+     VALUES (?, ?, ?, ?, 'in-progress')`,
+    [studentId, examId, startTime, endTime]
+  );
+
+  return { student_exam_id: result.insertId, start_time: startTime, end_time: endTime };
+}
+
+
+// 4️⃣ FETCH QUESTIONS FOR EXAM (when attempting)
+// -------------------------------------------------------
+export async function getExamQuestions(examId: number) {
+  const [questions] = await db.query(
+    `SELECT question_id, question_text, option_a, option_b, option_c, option_d
+     FROM question WHERE exam_id = ?`,
+    [examId]
+  );
+  return questions;
+}
+
+// -------------------------------------------------------
+// 5️⃣ SAVE STUDENT ANSWER (during attempt)
+// -------------------------------------------------------
+export async function saveStudentAnswer(
+  studentId: number,
+  questionId: number,
+  selectedOption: string
+) {
+  // find correct option
+  const [question] = await db.query(
+    `SELECT correct_option FROM question WHERE question_id = ?`,
+    [questionId]
+  );
+
+  if (question.length === 0) throw new Error('Question not found');
+
+  const isCorrect = question[0].correct_option === selectedOption ? 1 : 0;
+
+  await db.query(
+    `INSERT INTO student_answer (student_id, question_id, selected_option, is_correct)
+     VALUES (?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE selected_option = VALUES(selected_option), is_correct = VALUES(is_correct)`,
+    [studentId, questionId, selectedOption, isCorrect]
+  );
+
+  return { success: true };
+}
+
+
+
+export async function submitExam(studentExamId: number) {
+  // get exam info
+  const [examData] = await db.query(
+    `SELECT e.exam_id, e.total_marks, s.student_id
+     FROM student_exam s
+     JOIN exam e ON s.exam_id = e.exam_id
+     WHERE s.student_exam_id = ?`,
+    [studentExamId]
+  );
+
+  if (examData.length === 0) throw new Error('Exam not found');
+
+  const { exam_id, total_marks, student_id } = examData[0];
+
+  // count total and correct answers
+  const [ans] = await db.query(
+    `SELECT COUNT(*) AS total, SUM(is_correct) AS correct
+     FROM student_answer
+     WHERE student_id = ? AND question_id IN (
+       SELECT question_id FROM question WHERE exam_id = ?
+     )`,
+    [student_id, exam_id]
+  );
+
+  const total = ans[0].total || 0;
+  const correct = ans[0].correct || 0;
+  const percentage = total > 0 ? (correct / total) * 100 : 0;
+  const marksObtained = (total_marks * correct) / total;
+
+  // update student_exam
+  await db.query(
+    `UPDATE student_exam
+     SET status = 'completed', marks_obtained = ?, end_time = NOW()
+     WHERE student_exam_id = ?`,
+    [marksObtained, studentExamId]
+  );
+
+  // insert into result
+  await db.query(
+    `INSERT INTO result (student_exam_id, total_questions, correct_answers, total_marks, percentage)
+     VALUES (?, ?, ?, ?, ?)`,
+    [studentExamId, total, correct, marksObtained, percentage]
+  );
+
+  return { marksObtained, percentage, total, correct };
+}
+
+// -------------------------------------------------------
+// 7️⃣ FETCH STUDENT RESULT HISTORY
+// -------------------------------------------------------
+export async function getStudentResults(studentId: number) {
+  const [results] = await db.query(
+    `SELECT r.result_id, e.title, r.correct_answers, r.total_questions,
+            r.total_marks, r.percentage, se.start_time, se.end_time
+     FROM result r
+     JOIN student_exam se ON r.student_exam_id = se.student_exam_id
+     JOIN exam e ON se.exam_id = e.exam_id
+     WHERE se.student_id = ?
+     ORDER BY se.start_time DESC`,
+    [studentId]
+  );
+
+  return results;
+}
+
+// -------------------------------------------------------
+// 8️⃣ GET LIVE EXAMS (for students to see ongoing/upcoming)
+// -------------------------------------------------------
+export async function getAvailableExams(departmentId: number) {
+  const now = new Date();
+  const [exams] = await db.query(
+    `SELECT * FROM exam
+     WHERE department_id = ? AND start_time <= ? AND end_time >= ?`,
+    [departmentId, now, now]
+  );
+  return exams;
+}
+
+// -------------------------------------------------------
+// 9️⃣ HOD OR ADMIN OVERVIEW (see all results of a department)
+// -------------------------------------------------------
+export async function getDepartmentResults(departmentId: number) {
+  const [rows] = await db.query(
+    `SELECT s.name AS student_name, e.title AS exam_title,
+            r.correct_answers, r.total_questions, r.total_marks, r.percentage
+     FROM result r
+     JOIN student_exam se ON r.student_exam_id = se.student_exam_id
+     JOIN student s ON se.student_id = s.student_id
+     JOIN exam e ON se.exam_id = e.exam_id
+     WHERE e.department_id = ?
+     ORDER BY e.start_time DESC`,
+    [departmentId]
+  );
   return rows;
 }
+
+// -------------------------------------------------------
+// 🔟 CLEANUP OLD EXAMS (optional maintenance task)
+// -------------------------------------------------------
+export async function cleanupExpiredExams() {
+  await db.query(
+    `DELETE FROM exam WHERE end_time < DATE_SUB(NOW(), INTERVAL 1 YEAR)`
+  );
+}
+
+
+

@@ -6,14 +6,11 @@ import { getStudentCount, insertStudents } from "@/app/actions/studentActions";
 import { getAdminCount } from "@/app/actions/userActions";
 import ClockComponent from "@/components/clock";
 import { Button } from "@/components/ui/button";
-import { CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Spinner } from "@/components/ui/shadcn-io/spinner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUser } from "@/context/userProvider"
 import { departmentType, studentType } from "@/lib/types";
@@ -42,11 +39,10 @@ export default function AdminDashboard() {
     const { user, setUser } = useUser();
 
     const logOut = async () => {
-        await fetch("/auth/logout");
+        await fetch("/api/auth/logout", { method: "POST" });
         setUser(null);
         router.push("/login");
     }
-
 
     const [departments, setDepartments] = useState<deptTableType[] | null>(null)
 
@@ -68,7 +64,7 @@ export default function AdminDashboard() {
         init();
     }, [])
 
-    
+
 
     const [newDepartmentName, setNewDepartmentName] = useState("");
     const [newDepartmentCode, setNewDepartmentCode] = useState("");
