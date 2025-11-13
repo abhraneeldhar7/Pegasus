@@ -231,6 +231,7 @@ export default function AdminDashboard() {
                                         email: newStudentEmail,
                                         department_id: newStudentDeptId
                                     }])
+                                    console.log(res)
                                     toast.success("Added student")
                                 }
                                 catch (e) {
@@ -243,9 +244,11 @@ export default function AdminDashboard() {
                                 setNewStudentLoading(true);
                                 try {
                                     const res = await insertStudents(csvImportedStudents);
+                                    console.log(res)
                                 }
                                 catch (e) {
                                     toast.error("Error uploading")
+                                    console.log(e)
                                 }
                                 setNewStudentLoading(false);
                             }

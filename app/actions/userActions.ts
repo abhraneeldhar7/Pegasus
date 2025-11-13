@@ -1,6 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
+import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 var jwt = require('jsonwebtoken');
 
@@ -48,5 +49,26 @@ export async function getAdminCount(): Promise<number> {
     } catch (error) {
         console.error("Error fetching admin count:", error);
         throw new Error("Failed to get admin count");
+    }
+}
+
+
+export async function createAdmin() {
+    try {
+        const name = "Abhraneel Dhar";
+        const email = "abhraneeldhar@gmail.com";
+        const plainPassword = "helloworld";
+
+        // Hash password securely
+        const passwordHash = await bcrypt.hash(plainPassword, 10);
+
+        const [result] = await db.execute(
+            `INSERT INTO admin (name, email, password_hash) VALUES (?, ?, ?)`,
+            [name, email, passwordHash]
+        );
+
+        console.log("✅ Admin created successfully:", result);
+    } catch (err) {
+        console.error("❌ Error creating admin:", err);
     }
 }

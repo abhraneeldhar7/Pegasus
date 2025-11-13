@@ -1,6 +1,6 @@
 "use client"
 import { getDepartmentTableData } from "@/app/actions/departmentActions";
-import { addQuestion, deleteQuestion, getExamWithQuestions, saveExam, saveQuestions } from "@/app/actions/examActions";
+import { addQuestion, deleteExam, deleteQuestion, getExamWithQuestions, publishExam, saveExam, saveQuestions } from "@/app/actions/examActions";
 import ClockComponent from "@/components/clock";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -41,27 +41,41 @@ export default function ExamDetailsPage() {
         init();
     }, [])
 
+
+
     const handleAddQuestion = async () => {
-        toast.info("Wait...")
-        const newQ: questionType = {
-            exam_id: Number(exam_id),
-            question_id: questions?.length || 0 + 1,
-            question_text: "",
-            option_a: "",
-            option_b: "",
-            option_c: "",
-            option_d: "",
-            correct_option: "",
+        try {
+            toast.info("Adding question...");
+
+            const newQ: questionType = {
+                question_id: 0,
+                exam_id: Number(exam_id),
+                question_text: "",
+                option_a: "",
+                option_b: "",
+                option_c: "",
+                option_d: "",
+                correct_option: "",
+            };
+
+            const res = await addQuestion(newQ);
+
+            if (res.success) {
+                const insertedQuestion = { ...newQ, question_id: res.insertedId };
+                setQuestions((prev) => [...(prev || []), insertedQuestion]);
+                toast.success("Question added!");
+            } else {
+                toast.error("Failed to add question");
+            }
+
+            if (examDetails) {
+                await saveExam(examDetails);
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Error while adding question");
         }
-        await addQuestion(newQ)
-        setQuestions((prev) => [...prev || [], newQ])
-        toast.info("Added question")
-
-        if (!questions || !examDetails) return;
-        await saveQuestions(questions)
-        await saveExam(examDetails);
-
-    }
+    };
 
     const [departments, setDepartments] = useState<departmentType[] | null>(null)
 
@@ -108,8 +122,11 @@ export default function ExamDetailsPage() {
         if (!questions || !examDetails) return;
 
         setSaveLoader(true)
+
+        const tempExam = examDetails;
+        tempExam.total_marks = questions.length;
         const res = await saveQuestions(questions)
-        const res2 = await saveExam(examDetails);
+        const res2 = await saveExam(tempExam);
 
         if (res.success && res2.success) {
             toast.success("Questions saved successfully!")
@@ -119,6 +136,33 @@ export default function ExamDetailsPage() {
         }
         setSaveLoader(false)
     }
+
+
+    const [deleteExamLoader, setDeleteExamLoader] = useState(false)
+    const [deleteExamDialogOpen, setDeleteExamDialogOpen] = useState(false)
+    const [pusblishExamLoader, setPusblishExamLoader] = useState(false)
+    const [pusblishExamDialogOpen, setPusblishExamDialogOpen] = useState(false)
+
+    const handleDeleteExam = async () => {
+        setDeleteExamLoader(true)
+        await deleteExam(Number(exam_id))
+        router.push(`/admin/exams`)
+        setDeleteExamLoader(false)
+    }
+
+    const handlePublishExam = async () => {
+        if (!questions || !examDetails) return;
+        toast.info("Publishing Exam")
+        setPusblishExamLoader(true)
+        await saveQuestions(questions)
+        await saveExam(examDetails);
+        await publishExam(Number(exam_id));
+        setPusblishExamLoader(false);
+        toast.success("Exam Published")
+        router.push(`/admin/exams`)
+    }
+
+
 
     return (<div className="min-h-[100vh] max-w-[700px] w-full mx-auto md:py-[40px] py-[55px] px-[15px]">
 
@@ -170,6 +214,100 @@ export default function ExamDetailsPage() {
                                 }}
                                 className="max-w-[400px]" />
                         </div>
+
+                        <div className="flex flex-col gap-[5px]">
+                            <Label>Subject</Label>
+                            <Input placeholder="exam description..." value={examDetails.subject} onChange={(e) => {
+                                setExamDetails(prev => {
+                                    if (!prev) return prev;
+                                    return {
+                                        ...prev,
+                                        subject: e.target.value
+                                    }
+                                })
+                            }} className="max-w-[400px]" />
+                        </div>
+
+
+
+                        <div className="flex flex-col gap-[5px]">
+                            <Label>Start Time</Label>
+                            <div className="flex gap-4">
+                                <div className="flex flex-col gap-3">
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                id="date-picker"
+                                                className="w-32 justify-between font-normal"
+                                            >
+                                                {examDetails.start_time ? examDetails.start_time.toLocaleDateString() : "Select date"}
+                                                <ChevronDownIcon />
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={examDetails.start_time || undefined}
+                                                captionLayout="dropdown"
+                                                onSelect={(date: Date | undefined) => {
+                                                    if (!date) return
+
+                                                    // preserve old time if it exists
+                                                    let updatedDate = new Date(date)
+                                                    if (examDetails.start_time) {
+                                                        updatedDate.setHours(
+                                                            examDetails.start_time.getHours(),
+                                                            examDetails.start_time.getMinutes(),
+                                                            examDetails.start_time.getSeconds()
+                                                        )
+                                                    }
+
+                                                    setExamDetails(prev => {
+                                                        if (!prev) return prev;
+                                                        return {
+                                                            ...prev,
+                                                            start_time: updatedDate
+                                                        }
+                                                    })
+                                                }}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </div>
+                                <div className="flex flex-col gap-3">
+                                    <Input
+                                        type="time"
+                                        id="time-picker"
+                                        step="1"
+                                        defaultValue="00:00:00"
+                                        onChange={(e) => {
+                                            if (!examDetails.start_time) return
+
+                                            // parse time safely
+                                            const parts = e.target.value.split(":").map((v) => Number(v));
+                                            const hours = Number.isFinite(parts[0]) ? parts[0] : 0;
+                                            const minutes = Number.isFinite(parts[1]) ? parts[1] : 0;
+                                            const seconds = Number.isFinite(parts[2]) ? parts[2] : 0;
+
+                                            // update date in one call (avoids leaving seconds undefined)
+                                            const updatedDate = new Date(examDetails.start_time);
+                                            updatedDate.setHours(hours, minutes, seconds);
+
+                                            setExamDetails(prev => {
+                                                if (!prev) return prev;
+                                                return {
+                                                    ...prev,
+                                                    start_time: updatedDate
+                                                }
+                                            })
+                                        }}
+                                        className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
 
 
 
@@ -326,14 +464,14 @@ export default function ExamDetailsPage() {
                             <Popover>
                                 <PopoverTrigger asChild>
                                     <Button variant={q.correct_option === "" ? `outline` : `default`} className="w-fit h-[40px]">
-                                        {q.correct_option === "" ? "Select correct option" : q.correct_option}
+                                        {q.correct_option === "" ? "Select correct option" : q.correct_option.toUpperCase()}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="p-[5px] w-[120px]">
                                     {["A", "B", "C", "D"].map((option, i) => (
                                         <PopoverClose asChild key={i}>
                                             <Button variant="ghost" className="flex justify-start w-full" onClick={() => {
-                                                handleChange(q.question_id, "correct_option", option)
+                                                handleChange(q.question_id, "correct_option", option.toLowerCase())
                                             }}>Option {option}</Button>
                                         </PopoverClose>
                                     ))}
@@ -401,8 +539,10 @@ export default function ExamDetailsPage() {
             </div>
         </div>
 
+
+
         <div className="mt-[50px] flex gap-[20px] justify-between">
-            <Dialog>
+            <Dialog open={deleteExamDialogOpen} onOpenChange={setDeleteExamDialogOpen}>
                 <DialogTrigger asChild>
                     <Button variant="secondary" className="text-[red]">Delete this exam</Button>
                 </DialogTrigger>
@@ -413,34 +553,33 @@ export default function ExamDetailsPage() {
                     <DialogDescription>This will delete the exam and it's questions. Students will not be able to attempt it.</DialogDescription>
                     <DialogFooter className="md:gap-[30px]">
                         <DialogClose>Cancel</DialogClose>
-                        <Button>
+                        <Button loading={deleteExamLoader} onClick={() => handleDeleteExam()}>
                             Delete Exam
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
+            {!examDetails?.is_live &&
+                <Dialog open={pusblishExamDialogOpen} onOpenChange={setPusblishExamDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button  >Publish</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogTitle>Publish exam?</DialogTitle>
+                        <DialogDescription>This will set the exam to live and students can attempt and submit their answers</DialogDescription>
 
-
-
-
-
-            <Dialog>
-                <DialogTrigger asChild>
-                    <Button >Publish</Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogTitle>Publish exam?</DialogTitle>
-                    <DialogDescription>This will set the exam to live and students can attempt and submit their answers</DialogDescription>
-
-                    <DialogFooter className="md:gap-[30px]">
-                        <DialogClose>Cancel</DialogClose>
-                        <Button>
-                            Publish
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        <DialogFooter className="md:gap-[30px]">
+                            <DialogClose>Cancel</DialogClose>
+                            <Button loading={pusblishExamLoader} onClick={() => {
+                                handlePublishExam();
+                            }}>
+                                Publish
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            }
         </div>
     </div >)
 }

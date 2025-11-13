@@ -24,9 +24,10 @@ export default function ExamsPage() {
         exam_id: number,
         exam_name: string,
         department_name: string,
-        total_marks: number,
         start_time: Date,
         end_time: Date,
+        total_marks: number,
+        subject: string,
         total_students_enrolled: number
     }
 
@@ -246,8 +247,8 @@ export default function ExamsPage() {
                     <TableRow>
                         <TableHead>Name</TableHead>
                         <TableHead>Dept</TableHead>
-                        <TableHead>Start</TableHead>
-                        <TableHead>End</TableHead>
+                        <TableHead>Subject</TableHead>
+                        <TableHead>Total Marks</TableHead>
                         <TableHead>Enrolled</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                     </TableRow>
@@ -257,8 +258,8 @@ export default function ExamsPage() {
                         <TableRow key={index}>
                             <TableCell className="max-w-[150px] truncate">{exam.exam_name}</TableCell>
                             <TableCell className="max-w-[220px] truncate">{exam.department_name}</TableCell>
-                            <TableCell>{formatDateTime(exam.start_time)}</TableCell>
-                            <TableCell>{formatDateTime(exam.end_time)}</TableCell>
+                            <TableCell>{exam.subject}</TableCell>
+                            <TableCell>{exam.total_marks}</TableCell>
                             <TableCell>{exam.total_students_enrolled}</TableCell>
                             <TableCell className="text-right">
                                 <Popover>

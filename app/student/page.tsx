@@ -9,17 +9,38 @@ import { Ellipsis, GraduationCap, LayersIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getStudentDepartment } from "../actions/studentActions";
-import { getActiveExams } from "../actions/examActions";
+import {  getStudentExams, getUpcomingExams } from "../actions/examActions";
 import { formatDateTime } from "@/lib/utils";
 import Link from "next/link";
-import { Table, TableCaption, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody,  TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+interface studentExamType {
+    student_exam_id: number,
+    duration_minutes: number,
+    end_time: Date,
+    exam_description: string,
+    exam_id: number,
+    exam_title: string,
+    start_time: Date,
+    status: string,
+    subject: string,
+    total_marks: number,
+    title: string
+}
+
+
 
 export default function StudentDashboard() {
 
     const { user, setUser } = useUser();
 
     const [studentDept, setStudentDept] = useState<departmentType | null>(null)
-    const [activeExam, setActiveExam] = useState<examType[] | null>(null)
+    const [activeExam, setActiveExam] = useState<studentExamType[] | null>(null)
+    const [upcommingExams, setUpcommingExams] = useState<any[] | null>(null)
+    const [submittedExams, setSubmittedExams] = useState<studentExamType[] | null>(null)
+
+
+
     useEffect(() => {
         if (!user) return;
         const init = async () => {
@@ -28,10 +49,26 @@ export default function StudentDashboard() {
             setStudentDept(deptRes as departmentType)
             console.log(deptRes)
 
-            const activeExamRes = await getActiveExams();
-            setActiveExam(activeExamRes)
+            const studentExams = await getStudentExams(user.id);
+            console.log(studentExams)
 
 
+            const activeExams: studentExamType[] = [];
+            const submittedExams: studentExamType[] = [];
+            studentExams.exams.forEach((exam: studentExamType) => {
+                if (exam.status === "not_started") {
+                    activeExams.push(exam);
+                }
+                else if (exam.status == "completed") {
+                    submittedExams.push(exam);
+                }
+            });
+            setActiveExam(activeExams);
+            setSubmittedExams(submittedExams);
+
+            const upcommingExams = await getUpcomingExams(user.id);
+            console.log("upcoming exams: ", upcommingExams)
+            setUpcommingExams(upcommingExams.upcomingExams)
         }
         init();
     }, [user])
@@ -98,10 +135,11 @@ export default function StudentDashboard() {
             }
 
             {activeExam && activeExam.length > 0 && activeExam?.map((exam, index) => (
-                <Link href={`/exam/${exam.exam_id}`} className="rounded-[15px] md:h-[120px] h-[150px] shadow-md md:max-w-[220px] relative overflow-hidden px-[15px] py-[10px] bg-muted flex flex-col justify-between group select-none cursor-pointer" key={index}>
+                <Link href={`/student/exam/${exam.exam_id}`} className="rounded-[15px] h-[150px] shadow-md md:max-w-[300px] relative overflow-hidden px-[15px] py-[10px] bg-muted flex flex-col justify-between group select-none cursor-pointer" key={index}>
                     <LayersIcon size={90} className="opacity-[0.4] absolute bottom-[-10px] right-[-10px] text-primary transition-all duration-300 group-hover:bottom-[0px] group-hover:opacity-[0.8]" />
-                    <div className="flex gap-[10px] justify-between">
+                    <div className="flex gap-[10px] justify-between flex-col leading-[1.2em] pt-[5px]">
                         <h1 className="md:text-[19px] text-[22px] truncate">{exam.title}</h1>
+                        <p>{exam.subject}</p>
                     </div>
                     <div className="mt-auto">
                         <p className="md:text-[12px] text-[15px] font-[Mono]">{formatDateTime(exam.start_time)}</p>
@@ -111,19 +149,29 @@ export default function StudentDashboard() {
         </div>
 
         <div className="mt-[40px]">
-            <h1 className="text-[20px] font-[400]">Scheduled Exams</h1>
+            <h1 className="text-[20px] font-[400]">Upcomming Exams</h1>
 
             <Table className="mt-[20px]">
-                <TableCaption>List of all exams available</TableCaption>
                 <TableHeader>
                     <TableRow>
                         <TableHead>Exam name</TableHead>
                         <TableHead>Subject</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Scheduled at</TableHead>
+                        <TableHead>Date</TableHead>
                         <TableHead>Marks</TableHead>
+                        <TableHead>Duration</TableHead>
                     </TableRow>
                 </TableHeader>
+                <TableBody>
+                    {upcommingExams?.map((exam, index) => (
+                        <TableRow key={index}>
+                            <TableCell>{exam.title}</TableCell>
+                            <TableCell>{exam.subject}</TableCell>
+                            <TableCell>{formatDateTime(exam.start_time)}</TableCell>
+                            <TableCell>{exam.total_marks}</TableCell>
+                            <TableCell>{exam.duration_minutes}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
             </Table>
 
         </div>

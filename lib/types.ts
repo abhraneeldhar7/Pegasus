@@ -21,7 +21,8 @@ export interface examType {
     start_time: Date,
     end_time: Date,
     subject: string,
-    duration_minutes: number
+    duration_minutes: number,
+    is_live: boolean
 }
 
 export interface questionType {
