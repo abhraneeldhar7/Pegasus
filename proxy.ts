@@ -22,6 +22,10 @@ export async function proxy(req: NextRequest) {
     };
 
     // ✅ Step 1: Refresh logic
+
+
+
+
     if (refreshToken) {
         const decodedRefresh = verifyToken(refreshToken, process.env.REFRESH_SECRET!);
 
@@ -65,6 +69,16 @@ export async function proxy(req: NextRequest) {
 
     // ✅ Step 2: Role-based authorization
     const decodedAccess = verifyToken(tokenToUse, process.env.JWT_SECRET!);
+
+    // if (pathname == "/") {
+    //     if (decodedAccess.role == "admin") {
+    //         return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+    //     }
+    //     else if (decodedAccess.role == "student") {
+    //         return NextResponse.redirect(new URL("/admin/dashboard", req.url));
+    //     }
+    // }
+
 
     if (pathname.startsWith("/admin")) {
         if (!decodedAccess || decodedAccess === "expired" || decodedAccess.role !== "admin") {

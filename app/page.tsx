@@ -7,6 +7,8 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { link } from "fs";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
+import { useTheme } from "next-themes";
 
 
 const Index = () => {
@@ -116,6 +118,8 @@ const Index = () => {
     }
   ]
 
+  const { theme, setTheme } = useTheme();
+
 
   return (
     <div className="min-h-screen">
@@ -148,12 +152,14 @@ const Index = () => {
             </div>
 
             {/* Desktop CTAs */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-[25px]">
               <Link href="/login">
                 <Button>
                   Sign In
                 </Button>
               </Link>
+
+              <AnimatedThemeToggler />
             </div>
 
             {/* Mobile Menu Button */}
@@ -191,6 +197,12 @@ const Index = () => {
                   Team
                 </a>
                 <div className="flex flex-col gap-2 pt-2">
+                  <Button variant="ghost" onClick={() => {
+                    setTheme(theme == "dark" ? "light" : "dark")
+                  }
+                  } className="w-full">
+                    Change Theme
+                  </Button>
                   <Link href="/login">
                     <Button size="default" className="w-full">
                       Sign In
@@ -201,9 +213,9 @@ const Index = () => {
             </div>
           )}
         </div>
-      </nav>
+      </nav >
 
-      <main>
+      <main className={`${mobileMenuOpen?"blur-[4px]":"blur-[0px]"} transition-all`} onClick={()=>setMobileMenuOpen(false)}>
         {/* Hero Section */}
         <section className="relative pt-[100px] pb-20 overflow-hidden">
           {/* Background Gradient */}
@@ -579,7 +591,7 @@ const Index = () => {
 
       </main>
 
-    </div>
+    </div >
   );
 };
 
