@@ -6,23 +6,25 @@ import { useState } from "react";
 // import heroImage from "@/assets/hero-exam-dashboard.jpg";
 import Image from "next/image";
 import Link from "next/link";
+import { link } from "fs";
+
 
 const Index = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const currentYear = new Date().getFullYear();
+
 
   const adminFeatures = [
     {
       icon: Shield,
       title: "Secure Role-Based Access",
-      description: "Enterprise-grade login with customizable role permissions. Control who sees what with granular access management.",
-      highlight: "Bank-level security"
+      description: "Secured with JWT and active cookie trackin. Making the platform secure and seamless to work.",
+      highlight: "Request Level Security"
     },
     {
-      icon: Users,
-      title: "Department Management",
-      description: "Set up and organize departments with one-click. Streamline course structures and faculty assignments effortlessly.",
-      highlight: "One-click setup"
+      icon: GraduationCap,
+      title: "Exams management",
+      description: "Create and edit exams and publish them seamlessly, providing maximum efficiency.",
+      highlight: "Click and add questions"
     },
     {
       icon: FileSpreadsheet,
@@ -32,8 +34,8 @@ const Index = () => {
     },
     {
       icon: ClipboardCheck,
-      title: "Smart Exam Creation",
-      description: "Design custom assessments with MCQ, essays, and more. Schedule, publish, and monitor with anti-cheating measures built-in.",
+      title: "Instant Results",
+      description: "Get instant results of students who completed an exam.",
       highlight: "Anti-cheat enabled"
     }
   ];
@@ -43,19 +45,19 @@ const Index = () => {
       icon: Smartphone,
       title: "Device-Agnostic Access",
       description: "Attempt exams seamlessly on laptops, tablets, or phones. Our adaptive UI ensures a consistent experience across all screen sizes.",
-      stat: "Works on 99% of devices"
+      stat: "Works on all devices"
     },
     {
       icon: Clock,
-      title: "Real-Time Progress",
-      description: "Never lose your work. Auto-save keeps your progress secure, with live timers and question navigation at your fingertips.",
-      stat: "Auto-saves every 30s"
+      title: "Instant Save",
+      description: "Never lose your work. Auto-save keeps your answers secure and question navigation at your fingertips.",
+      stat: "Auto Save"
     },
     {
       icon: TrendingUp,
-      title: "Instant Detailed Results",
+      title: "Instant Results",
       description: "No more waiting weeks. Get comprehensive score breakdowns, question-by-question feedback, and performance analytics immediately after submission.",
-      stat: "Results in <2 seconds"
+      stat: "Accurate Result Display"
     }
   ];
 
@@ -98,6 +100,23 @@ const Index = () => {
     }
   ];
 
+
+  const team = [
+    {
+      name: "Abhraneel Dhar",
+      pic: "/abhraneeldhar.jpeg",
+      dept: "CSBS' 27",
+      link: "https://abhraneeldhar.vercel.app"
+    },
+    {
+      name: "Abhinandan Rakshit",
+      dept: "CSBS' 27",
+      pic: "/abhinandan.jpeg",
+      link: "https://www.linkedin.com/in/abhinandan-rakshit-065866293"
+    }
+  ]
+
+
   return (
     <div className="min-h-screen">
       {/* Navigation */}
@@ -107,8 +126,10 @@ const Index = () => {
             {/* Logo */}
             <div className="flex items-center gap-2">
               <div className="bg-gradient-hero p-2 rounded-lg">
-                <Image src="/appLogo.png" className="
+                <Link href="/" className="w-fit">
+                  <Image src="/appLogo.png" className="
               object-contain h-[50px] w-[40px]" unoptimized alt="" height={60} width={60} />
+                </Link>
               </div>
               <span className="text-xl font-bold text-foreground">Pegasus</span>
             </div>
@@ -156,14 +177,14 @@ const Index = () => {
                   Features
                 </a>
                 <a
-                  href="#benefits"
+                  href="#about"
                   className="text-foreground hover:text-primary transition-colors font-medium py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   About
                 </a>
                 <a
-                  href="#testimonials"
+                  href="#team"
                   className="text-foreground hover:text-primary transition-colors font-medium py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -184,7 +205,7 @@ const Index = () => {
 
       <main>
         {/* Hero Section */}
-        <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
+        <section className="relative pt-[100px] pb-20 overflow-hidden">
           {/* Background Gradient */}
           <div className="absolute inset-0 bg-gradient-feature -z-10" />
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 -z-10" />
@@ -192,34 +213,36 @@ const Index = () => {
           <div className="container mx-auto px-4 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left Content */}
-              <div className="space-y-[20px] animate-fade-in">
+              <div className="flex flex-col gap-[25px] animate-fade-in">
                 <div className="inline-block">
-                  <div className="bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold border border-primary/20">
+                  <div className="bg-primary/10 w-fit text-primary px-4 py-2 rounded-full text-[14px] border border-primary/20 mx-auto">
                     Online Exam System
                   </div>
                 </div>
 
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-                  Revolutionize Exam Management -{" "}
-                  <span className="bg-gradient-hero bg-clip-text text-transparent">
+                <div>
+                  <h1 className="text-center md:text-[60px] text-[35px] font-bold text-foreground leading-[1.2em]">
+                    College Examination System
+                  </h1>
+                  <h2 className="bg-gradient-to-r font-[600] text-center from-blue-600 via-green-500 to-indigo-400 inline-block text-transparent bg-clip-text md:text-[40px] text-[20px] leading-[1.2em] w-full mt-[10px]">
                     Secure, Instant, Effortless
-                  </span>
-                </h1>
+                  </h2>
+                </div>
 
-                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+                <p className="text-lg font-[400] opacity-[0.7] md:text-xl text-muted-foreground leading-relaxed text-center">
                   Empower your institution with Pegasus: From seamless admin workflows to real-time student results.
                   Reduce administrative burden, and deliver instant feedback.
                 </p>
 
                 {/* CTA Buttons */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/login">
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                  <Link href="/admin/dashboard">
                     <Button size="lg" className="group">
                       Get Started as Admin
                       <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
-                  <Link href="/login">
+                  <Link href="/student">
                     <Button variant="outline" size="lg" className="group">
                       Join as Student
                       <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -228,16 +251,16 @@ const Index = () => {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-6 pt-8 border-t border-border">
-                  <div>
+                <div className="flex pt-[30px] mt-[20px] text-center border-t border-border justify-center">
+                  <div className="flex-1">
                     <div className="text-2xl md:text-3xl font-bold text-primary">70%</div>
                     <div className="text-sm text-muted-foreground">Time Saved</div>
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="text-2xl md:text-3xl font-bold text-primary">99.9%</div>
                     <div className="text-sm text-muted-foreground">Uptime</div>
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="text-2xl md:text-3xl font-bold text-primary">500+</div>
                     <div className="text-sm text-muted-foreground">Institutions</div>
                   </div>
@@ -248,11 +271,19 @@ const Index = () => {
               <div className="relative animate-fade-in" style={{ animationDelay: "0.2s" }}>
                 <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                   <Image
-                    src="/heroImg.png"
+                    src="/heroImgLight.png"
                     height={100}
                     width={100}
-                    alt="ExamHub dashboard showing exam creation and student results interface"
-                    className="w-full h-auto object-cover"
+                    alt=""
+                    className="w-full h-auto object-cover block dark:hidden"
+                    unoptimized
+                  />
+                  <Image
+                    src="/heroImgDark.png"
+                    height={100}
+                    width={100}
+                    alt=""
+                    className="w-full h-auto object-cover hidden dark:block"
                     unoptimized
                   />
 
@@ -287,24 +318,27 @@ const Index = () => {
                   className="p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group border-border animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <div className="space-y-4">
-                    {/* Icon */}
-                    <div className="inline-flex p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-gradient-hero group-hover:text-primary-foreground transition-all">
-                      <feature.icon className="h-6 w-6" />
+                  <div className="flex justify-between flex-col h-full">
+                    <div className="flex flex-col">
+
+                      {/* Icon */}
+                      <div className="inline-flex p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-gradient-hero  transition-all w-fit">
+                        <feature.icon className="h-6 w-6" />
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors mt-[15px]">
+                        {feature.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-muted-foreground leading-relaxed mt-[5px]">
+                        {feature.description}
+                      </p>
                     </div>
 
-                    {/* Title */}
-                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                      {feature.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
-
                     {/* Highlight Badge */}
-                    <div className="inline-block bg-accent/10 text-accent px-3 py-1 rounded-full text-xs font-semibold border border-accent/20">
+                    <div className="inline-block bg-accent/10 text-accent px-3 py-1 rounded-full text-xs font-semibold border border-accent/20 mt-[10px] w-fit">
                       {feature.highlight}
                     </div>
                   </div>
@@ -313,7 +347,7 @@ const Index = () => {
             </div>
 
             {/* Visual Demo Section */}
-            <div className="mt-16 rounded-2xl bg-gradient-feature border border-border p-8 lg:p-12 shadow-lg">
+            {/* <div className="mt-16 rounded-2xl bg-gradient-feature border border-border p-8 lg:p-12 shadow-lg">
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
                   <h3 className="text-2xl lg:text-3xl font-bold text-foreground">
@@ -335,20 +369,20 @@ const Index = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </section>
 
         {/* Student Experience Section */}
-        <section id="testimonials" className="py-20 lg:py-32 bg-gradient-feature">
+        <section className="bg-gradient-feature">
           <div className="container mx-auto px-4 lg:px-8">
             {/* Section Header */}
             <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 animate-fade-in">
               <div className="inline-block bg-accent/10 text-accent px-4 py-2 rounded-full text-sm font-semibold border border-accent/20">
                 Student Portal
               </div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
-                Student-First: Attempt, Submit, Succeed – Instantly
+              <h2 className="text-3xl md:text-4xl lg:text-5xl leading-[1.4em] font-bold text-foreground">
+                Student-First<br /> Attempt, Submit, Succeed
               </h2>
               <p className="text-lg text-muted-foreground">
                 A stress-free exam experience designed around students. Focus on knowledge, not technical difficulties.
@@ -363,25 +397,28 @@ const Index = () => {
                   className="p-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group border-border bg-background animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <div className="space-y-4">
-                    {/* Icon */}
-                    <div className="inline-flex p-4 rounded-2xl bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-all">
-                      <feature.icon className="h-8 w-8" />
+                  <div className="flex flex-col justify-between h-full">
+                    <div className="flex flex-col">
+
+                      {/* Icon */}
+                      <div className="w-fit inline-flex p-4 rounded-2xl bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-all">
+                        <feature.icon className="h-8 w-8" />
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="text-xl mt-[15px] font-bold text-foreground">
+                        {feature.title}
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-muted-foreground mt-[5px] leading-relaxed">
+                        {feature.description}
+                      </p>
                     </div>
-
-                    {/* Title */}
-                    <h3 className="text-xl font-bold text-foreground">
-                      {feature.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
 
                     {/* Stat Badge */}
                     <div className="pt-2">
-                      <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold">
+                      <div className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-semibold mt-[10px]">
                         {feature.stat}
                       </div>
                     </div>
@@ -391,7 +428,7 @@ const Index = () => {
             </div>
 
             {/* Testimonial Card */}
-            <div className="max-w-4xl mx-auto">
+            {/* <div className="max-w-4xl mx-auto">
               <Card className="p-8 lg:p-12 bg-primary text-primary-foreground shadow-xl border-none">
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
@@ -414,14 +451,13 @@ const Index = () => {
                   </div>
                 </div>
               </Card>
-            </div>
+            </div> */}
           </div>
         </section>
 
         {/* Benefits Section */}
-        <section id="benefits" className="py-20 lg:py-32 bg-background">
+        {/* <section id="benefits" className="bg-background">
           <div className="container mx-auto px-4 lg:px-8">
-            {/* Section Header */}
             <div className="text-center max-w-3xl mx-auto mb-16 space-y-4 animate-fade-in">
               <div className="inline-block bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-semibold border border-primary/20">
                 Why ExamHub?
@@ -434,7 +470,6 @@ const Index = () => {
               </p>
             </div>
 
-            {/* Benefits Grid */}
             <div className="grid md:grid-cols-3 gap-8">
               {benefits.map((benefit, index) => (
                 <Card
@@ -443,7 +478,6 @@ const Index = () => {
                   style={{ animationDelay: `${index * 0.15}s` }}
                 >
                   <div className="space-y-6">
-                    {/* Icon & Stat */}
                     <div className="flex items-start justify-between">
                       <div className="inline-flex p-4 rounded-2xl bg-primary/10 text-primary group-hover:bg-gradient-hero group-hover:text-primary-foreground transition-all group-hover:scale-110">
                         <benefit.icon className="h-8 w-8" />
@@ -458,7 +492,6 @@ const Index = () => {
                       </div>
                     </div>
 
-                    {/* Title & Description */}
                     <div className="space-y-2">
                       <h3 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors">
                         {benefit.title}
@@ -468,7 +501,6 @@ const Index = () => {
                       </p>
                     </div>
 
-                    {/* Details List */}
                     <ul className="space-y-2 pt-4 border-t border-border">
                       {benefit.details.map((detail, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -482,7 +514,6 @@ const Index = () => {
               ))}
             </div>
 
-            {/* Trust Badges */}
             <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6">
               {[
                 { label: "ISO 27001", sublabel: "Certified" },
@@ -501,7 +532,51 @@ const Index = () => {
               ))}
             </div>
           </div>
+        </section> */}
+
+
+
+        <section id="team" className="py-20 flex flex-col gap-[30px] px-[15px]">
+
+          <div>
+
+            <h2 className="text-center px-[20px] text-3xl md:text-4xl lg:text-5xl leading-[1.4em] font-bold text-foreground">
+              Our Team
+            </h2>
+            <p className="text-lg text-muted-foreground text-center max-w-[600px] mx-auto">
+              Our team collaborated effectively to design, develop, and document the College Examination System.
+            </p>
+          </div>
+
+
+          <div className="flex md:flex-row flex-col gap-[30px] justify-between max-w-[800px] mx-auto w-full md:gap-[60px] items-center">
+
+
+
+            {team.map((person, index) => (
+              <Link href={person.link} target="_blank" className="p-[30px] rounded-[10px] flex flex-col gap-[10px] bg-card shadow-sm group hover:translate-y-[-5px] transition-all gap-[25px] max-w-[400px] w-full h-[300px] justify-center items-center text-center relative overflow-hidden" key={index}>
+                <div className="w-full h-[50px] blur-[70px] bg-primary rounded-[50%] top-[-40px] absolute rotate-[-40deg] opacity-[0.7] dark:bg-foreground" />
+
+                <Image unoptimized alt="" height={60} width={60} src={person.pic} className="rounded-[15px] object-cover h-[100px] w-[100px] mx-auto z-[2]" />
+                <div className="flex flex-col gap-[5px]">
+                  <h1 className="text-[24px] font-[500] leading-[1em]">{person.name}</h1>
+                  <p className="text-[17px] font-[300] font-[Mono] opacity-[0.8]">{person.dept}</p>
+                </div>
+                <p className="text-[14px] text-right w-fit ml-auto opacity-[0.4] group-hover:opacity-[0.8]">Visit Profile</p>
+              </Link>
+            ))}
+
+
+
+
+          </div>
         </section>
+
+
+
+
+
+
       </main>
 
     </div>

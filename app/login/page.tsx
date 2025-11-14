@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 import { createAdmin } from "../actions/userActions"
+import Link from "next/link"
+import { ChevronLeft } from "lucide-react"
 
 export default function LoginPage() {
     const router = useRouter();
@@ -26,8 +28,11 @@ export default function LoginPage() {
 
     return (<div className="h-[100vh] w-full flex">
         <div className="flex-1 flex flex-col md:p-[40px] p-[15px] justify-center">
+            <Link href="/" className="fixed top-[20px] left-[20px] w-fit text-[15px] flex items-center gap-[10px] opacity-[0.7]"><ChevronLeft size={18}/> Home</Link>
             <div className="flex justify-center mb-[15px]">
+              <Link href="/">
                 <Image src="appLogo.png" alt="" unoptimized height={100} width={100} />
+              </Link>
             </div>
             <h1 className="text-[27px] text-center">Log in to Pegasus</h1>
 

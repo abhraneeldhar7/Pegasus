@@ -215,4 +215,5 @@
 body {
   font-family: "Inter";
   font-weight: 370;
+  scroll-behavior: smooth;
 }

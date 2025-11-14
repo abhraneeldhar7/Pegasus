@@ -76,7 +76,7 @@ export async function proxy(req: NextRequest) {
         if (
             !decodedAccess ||
             decodedAccess === "expired" ||
-            (decodedAccess.role !== "student" && decodedAccess.role !== "admin")
+            (decodedAccess.role !== "student")
         ) {
             return NextResponse.redirect(new URL("/login", req.url));
         }

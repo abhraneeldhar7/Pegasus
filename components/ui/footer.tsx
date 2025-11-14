@@ -5,9 +5,9 @@ export default function FooterPage() {
 
         <div className="flex flex-col">
             <h1 className="text-[30px]">Pegasus</h1>
-            <p className="opacity-[0.5] text-[12px]">by</p>
-            <p className="mt-[5px] text-[14px] opacity-[0.8] font-[300]">Abhraneel Dhar</p>
+            <p className="opacity-[0.5] text-[12px] mb-[5px]">by</p>
             <p className="text-[14px] opacity-[0.8] font-[300]">Abhinandan Rakshit</p>
+            <p className="text-[14px] opacity-[0.8] font-[300]">Abhraneel Dhar</p>
         </div>
 
         <div className="flex gap-[10px] items-end md:items-center md:flex-row flex-col-reverse">
