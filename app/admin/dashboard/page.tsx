@@ -41,7 +41,7 @@ export default function AdminDashboard() {
     const logOut = async () => {
         await fetch("/api/auth/logout", { method: "POST" });
         setUser(null);
-        router.push("/login");
+        router.push("/");
     }
 
     const [departments, setDepartments] = useState<deptTableType[] | null>(null)

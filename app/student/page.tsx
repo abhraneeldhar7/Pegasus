@@ -79,7 +79,7 @@ export default function StudentDashboard() {
     const logOut = async () => {
         await fetch("/api/auth/logout", { method: "POST" });
         setUser(null);
-        router.push("/login");
+        router.push("/");
     }
 
 
