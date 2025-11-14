@@ -448,7 +448,7 @@ export default function AdminDashboard() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Name</TableHead>
+                            <TableHead>Department Name</TableHead>
                             <TableHead>Code</TableHead>
                             <TableHead className="w-[50px]">Students</TableHead>
                             <TableHead className="text-right">HOD</TableHead>
